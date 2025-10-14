@@ -72,7 +72,7 @@ class AttentionVisualizer:
 
         # Attention map с colorbar
         if self.im2 is None:
-            self.im2 = self.axes[1].imshow(mask_np, cmap='jet')
+            self.im2 = self.axes[1].imshow(mask_np, cmap='jet', vmin=0, vmax=1)
             cbar = self.fig.colorbar(self.im2, ax=self.axes[1])
         else:
             self.im2.set_data(mask_np)
@@ -81,7 +81,7 @@ class AttentionVisualizer:
         self.axes[1].axis('off')
 
         self.axes[2].imshow(img_np)
-        self.axes[2].imshow(mask_np, cmap='jet', alpha=0.5)
+        self.axes[2].imshow(mask_np, cmap='jet', alpha=0.5, vmin=0, vmax=1)
         self.axes[2].set_title('Overlay')
         self.axes[2].axis('off')
 

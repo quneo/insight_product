@@ -13,7 +13,7 @@ def train_model(
     train_loader, 
     val_loader, 
     num_epochs=10, 
-    lr=1e-3, 
+    lr=1e-4, 
     device='cuda' if torch.cuda.is_available() else 'cpu',
     save_dir='results'
 ):
@@ -125,4 +125,4 @@ def train_model(
 if __name__ == "__main__":
     train_loader, val_loader = get_dataloader("data/realdata", batch_size=32, val_split=0.2)
     model = Model(num_classes=len(train_loader.dataset.dataset.classes), emb_dim=128)
-    trained_model, history = train_model(model, train_loader, val_loader, num_epochs=10, lr=1e-3)
+    trained_model, history = train_model(model, train_loader, val_loader, num_epochs=10, lr=1e-4)
