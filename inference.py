@@ -21,7 +21,7 @@ class AttentionVisualizer:
 
         # Даталоадер
         train_loader, val_loader = get_dataloader(data_dir, batch_size=batch_size, val_split=0.2)
-        self.val_loader = torch.utils.data.DataLoader(train_loader.dataset, batch_size=batch_size, shuffle=False, num_workers=0)
+        self.val_loader = torch.utils.data.DataLoader(val_loader.dataset, batch_size=batch_size, shuffle=False, num_workers=0)
         self.iterator = iter(self.val_loader)
         self.class_names = train_loader.dataset.dataset.classes
 

@@ -36,7 +36,7 @@ class ArcFaceLoss(nn.Module):
 
 
 class AttentionLoss(nn.Module):
-    def __init__(self, num_classes, emb_dim=128, s=20.0, m=0.2, w_classif=0.7, w_center=1.3, w_compact=1.9, w_tv=0.9, w_sparse=4.0):
+    def __init__(self, num_classes, emb_dim=128, s=20.0, m=0.2, w_classif=0.7, w_center=0.8, w_compact=1.9, w_tv=0.9, w_sparse=4.0):
         super().__init__()
         self.arcface = ArcFaceLoss(num_classes, emb_dim, s=s, m=m)
         self.w_classif = w_classif
