@@ -38,6 +38,11 @@ def train_model(
         train_loss = 0
         correct = 0
         total = 0
+
+        # накопим статистику внимания и лоссов
+        attn_mins, attn_means, attn_maxs = [], [], []
+        loss_cls_vals, loss_center_vals, loss_compact_vals = [], [], []
+
         pbar = tqdm(train_loader, desc=f"Epoch {epoch}/{num_epochs} [Train]")
         for images, labels in pbar:
             images, labels = images.to(device), labels.to(device)
@@ -48,11 +53,31 @@ def train_model(
             loss.backward()
             optimizer.step()
 
+            # статистика внимания
+            attn_mins.append(attn_map.min().item())
+            attn_means.append(attn_map.mean().item())
+            attn_maxs.append(attn_map.max().item())
+
+            # статистика лоссов
+            loss_cls_vals.append(loss_dict["cls"])
+            loss_center_vals.append(loss_dict["center"])
+            loss_compact_vals.append(loss_dict["compact"])
+
             train_loss += loss.item() * images.size(0)
             preds = logits.argmax(dim=1)
             correct += (preds == labels).sum().item()
             total += labels.size(0)
-            pbar.set_postfix({'loss': loss.item(), 'acc': f"{100*correct/total:.2f}%"})
+
+            pbar.set_postfix({
+                'loss': f"{loss.item():.3f}",
+                'cls': f"{loss_dict['cls']:.3f}",
+                'center': f"{loss_dict['center']:.3f}",
+                'compact': f"{loss_dict['compact']:.3f}",
+                'attn_min': f"{attn_map.min().item():.3f}",
+                'attn_mean': f"{attn_map.mean().item():.3f}",
+                'attn_max': f"{attn_map.max().item():.3f}",
+                'acc': f"{100*correct/total:.2f}%"
+            })
 
         train_loss /= total
         train_acc = correct / total

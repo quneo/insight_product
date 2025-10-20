@@ -4,69 +4,62 @@ import torch.nn.functional as F
 from torchvision import models
 from torchinfo import summary
 
+
 class Model(nn.Module):
+    """
+    EfficientNet-B0 backbone + spatial attention (на 14x14).
+    Используется встроенное SE (канальное внимание) + наше пространственное.
+    """
     def __init__(self, num_classes=None, emb_dim=128):
         super().__init__()
-        backbone = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
+        backbone = models.efficientnet_b0(weights=models.EfficientNet_B0_Weights.IMAGENET1K_V1)
+        features = list(backbone.features.children())
 
-        # Разделяем backbone на части, убираем последний ReLU из layer3
-        layer3_modules = list(backbone.layer3.children())
-        last_block = layer3_modules[-1]
-        # Уберем ReLU из последнего Bottleneck блока
-        last_block.relu = nn.Identity()
-        layer3_modules[-1] = last_block
+        # EfficientNet-B0: features = [0..8] (9 блоков)
+        # После features[5] → карта 14x14
+        self.stage1 = nn.Sequential(*features[:6])  # до 14×14
+        self.stage2 = nn.Sequential(*features[6:])  # после внимания — 7×7
 
-        self.early_features = nn.Sequential(
-            backbone.conv1, backbone.bn1, backbone.relu, backbone.maxpool,
-            backbone.layer1, backbone.layer2, nn.Sequential(*layer3_modules)
+        # Spatial attention на 14×14
+        self.spatial_attn = nn.Sequential(
+            nn.Conv2d(112, 1, kernel_size=1),  # 112 каналов на этом уровне
+            nn.Sigmoid()
         )
-        
-        self.layer4 = backbone.layer4  # отдельно layer4
 
-        # Attention после layer3 (14x14)
-        self.attention_conv = nn.Conv2d(256, 1, kernel_size=1)
-        self.sigmoid = nn.Sigmoid()
-        self.post_attn_relu = nn.ReLU(inplace=True)  # ReLU после применения attention
-
-        self.emb_fc = nn.Linear(512*7*7, emb_dim)  # финальный размер после layer4
-
-        if num_classes:
-            self.classifier = nn.Linear(emb_dim, num_classes)
-        else:
-            self.classifier = None
+        # Эмбеддинг и классификация
+        self.pool = nn.AdaptiveAvgPool2d(1)
+        self.fc = nn.Linear(1280, emb_dim)
+        self.bn = nn.BatchNorm1d(emb_dim)
+        self.classifier = nn.Linear(emb_dim, num_classes) if num_classes else None
 
     def forward(self, x, return_attn=False):
-        # Ранние features
-        features_early = self.early_features(x)  # [B, 256, 14, 14]
+        # До внимания
+        feats_early = self.stage1(x)  # [B,112,14,14]
 
-        # Attention
-        attn_map = self.sigmoid(self.attention_conv(features_early))  # [B,1,14,14]
+        # Пространственное внимание
+        attn_map = self.spatial_attn(feats_early)  # [B,1,14,14]
+        feats_weighted = feats_early * attn_map
 
-        # Применяем attention
-        features_attn = features_early * attn_map
-        features_attn = self.post_attn_relu(features_attn)  # ReLU после взвешивания
+        # Продолжение энкодера
+        feats_final = self.stage2(feats_weighted)  # [B,1280,7,7]
 
-        # Layer4
-        features_final = self.layer4(features_attn)  # [B,512,7,7]
-
-        # Классификация
-        flatten_features = features_final.view(features_final.size(0), -1)
-        emb = self.emb_fc(flatten_features)
+        # Эмбеддинг
+        pooled = self.pool(feats_final).flatten(1)
+        emb = F.normalize(self.bn(self.fc(pooled)), dim=1)
 
         if self.classifier is not None:
-            out = self.classifier(emb)
+            logits = self.classifier(emb)
             if return_attn:
-                return emb, out, attn_map
+                return emb, logits, attn_map
             else:
-                return emb, out
+                return emb, logits
         else:
             if return_attn:
                 return emb, attn_map
             else:
                 return emb
 
-            
 
 if __name__ == "__main__":
     model = Model(num_classes=20)
-    summary(model)
+    summary(model, input_size=(1, 3, 224, 224))

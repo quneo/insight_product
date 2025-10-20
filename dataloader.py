@@ -5,7 +5,7 @@ import os
 import matplotlib.pyplot as plt 
 
 
-def get_dataloader(data_dir, batch_size=64, val_split=0.1, seed=42):
+def get_dataloader(data_dir, batch_size=64, val_split=0.1, seed=41):
     """
     Создает train и validation даталоадеры для изображений
     
@@ -130,5 +130,5 @@ if __name__ == "__main__":
         print(f"Labels: {labels}")
         
         # Визуализация батча
-        show_batch(images, labels, train_loader.dataset.dataset.classes)
+        show_batch(images, labels, train_loader.dataset.classes)
         break
