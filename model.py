@@ -15,22 +15,20 @@ class Model(nn.Module):
         backbone = models.efficientnet_b0(weights=models.EfficientNet_B0_Weights.IMAGENET1K_V1)
         features = list(backbone.features.children())
 
-        # EfficientNet-B0: features = [0..8] (9 блоков)
-        # После features[5] → карта 14x14
         self.stage1 = nn.Sequential(*features[:6])  # до 14×14
         self.stage2 = nn.Sequential(*features[6:])  # после внимания — 7×7
 
         # Spatial attention на 14×14
         self.spatial_attn = nn.Sequential(
             nn.Conv2d(112, 1, kernel_size=1),  # 112 каналов на этом уровне
+            nn.BatchNorm2d(1),
             nn.Sigmoid()
         )
 
-        # Эмбеддинг и классификация
+        # Эмбеддинг
         self.pool = nn.AdaptiveAvgPool2d(1)
         self.fc = nn.Linear(1280, emb_dim)
         self.bn = nn.BatchNorm1d(emb_dim)
-        self.classifier = nn.Linear(emb_dim, num_classes) if num_classes else None
 
     def forward(self, x, return_attn=False):
         # До внимания
@@ -47,17 +45,10 @@ class Model(nn.Module):
         pooled = self.pool(feats_final).flatten(1)
         emb = F.normalize(self.bn(self.fc(pooled)), dim=1)
 
-        if self.classifier is not None:
-            logits = self.classifier(emb)
-            if return_attn:
-                return emb, logits, attn_map
-            else:
-                return emb, logits
+        if return_attn:
+            return emb, attn_map
         else:
-            if return_attn:
-                return emb, attn_map
-            else:
-                return emb
+            return emb
 
 
 if __name__ == "__main__":

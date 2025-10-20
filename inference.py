@@ -14,13 +14,14 @@ class AttentionVisualizer:
 
         # Модель
         self.model = Model(num_classes=num_classes, emb_dim=128)
-        self.model.load_state_dict(torch.load(model_path, map_location=device))
+        checkpoint = torch.load(model_path, map_location=device)
+        self.model.load_state_dict(checkpoint['model_state_dict'])
         self.model.to(device)
         self.model.eval()
 
         # Даталоадер
         train_loader, val_loader = get_dataloader(data_dir, batch_size=batch_size, val_split=0.2)
-        self.val_loader = torch.utils.data.DataLoader(val_loader.dataset, batch_size=batch_size, shuffle=False, num_workers=0)
+        self.val_loader = torch.utils.data.DataLoader(train_loader.dataset, batch_size=batch_size, shuffle=False, num_workers=0)
         self.iterator = iter(self.val_loader)
         self.class_names = train_loader.dataset.dataset.classes
 
@@ -49,7 +50,7 @@ class AttentionVisualizer:
 
         images, labels = images.to(self.device), labels.to(self.device)
         with torch.no_grad():
-            emb, logits, attn_map = self.model(images, return_attn=True)
+            emb, attn_map = self.model(images, return_attn=True)
 
         img = images[0].cpu()
         mask = attn_map[0:1]  # [1,1,H,W]
