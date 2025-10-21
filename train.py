@@ -21,7 +21,7 @@ def train_model(
     os.makedirs(save_dir, exist_ok=True)
 
     model.to(device)
-    num_classes = len(train_loader.dataset.dataset.classes)
+    num_classes = len(train_loader.dataset.classes)
     criterion = AttentionLoss(num_classes=num_classes, emb_dim=128).to(device)
     optimizer = optim.Adam(list(model.parameters()) + list(criterion.parameters()), lr=lr)
 

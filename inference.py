@@ -93,4 +93,4 @@ class AttentionVisualizer:
 
 
 if __name__ == "__main__":
-    AttentionVisualizer(model_path="results/model_final.pth", data_dir="data", num_classes=124, batch_size=1)
+    AttentionVisualizer(model_path="results/model_epoch3.pth", data_dir="data", num_classes=124, batch_size=1)
