@@ -66,7 +66,7 @@ class AttentionLoss(nn.Module):
             self.w_sparse = 1.0
             self.w_compact = 1.5
             self.w_tv = 0.4
-            self.w_max = 2.0
+            self.w_max = 2.3
             self.w_classif = 1.3
 
     def forward(self, emb, labels, attn_map):
@@ -110,7 +110,7 @@ class AttentionLoss(nn.Module):
         if self.current_epoch <= 7:
             L_sparse = torch.relu(mu - 0.3)
         else:
-            L_sparse = torch.relu(0.3 - mu)
+            L_sparse = torch.relu(0.6 - mu)
 
         # --- 6. Штраф за низкие максимумы ---
         attn_max_vals = attn_map.view(B, -1).max(dim=1).values  # [B]
