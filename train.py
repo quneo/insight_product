@@ -5,17 +5,18 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import os
 from losses import AttentionLoss
-from model import Model  
+from model import Model
 from dataloader import get_dataloader
 
+
 def train_model(
-    model, 
-    train_loader, 
-    val_loader, 
-    num_epochs=10, 
-    lr=1e-4, 
-    device='cuda' if torch.cuda.is_available() else 'cpu',
-    save_dir='results'
+    model,
+    train_loader,
+    val_loader,
+    num_epochs=10,
+    lr=1e-4,
+    device="cuda" if torch.cuda.is_available() else "cpu",
+    save_dir="results",
 ):
     os.makedirs(save_dir, exist_ok=True)
 
@@ -23,15 +24,10 @@ def train_model(
     num_classes = len(train_loader.dataset.dataset.classes)
     criterion = AttentionLoss(num_classes=num_classes, emb_dim=128).to(device)
     optimizer = optim.Adam(list(model.parameters()) + list(criterion.parameters()), lr=lr)
-    
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=2)
 
-    history = {
-        'train_loss': [],
-        'val_loss': [],
-        'train_acc': [],
-        'val_acc': []
-    }
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=0.5, patience=2)
+
+    history = {"train_loss": [], "val_loss": [], "train_acc": [], "val_acc": []}
 
     for epoch in range(1, num_epochs + 1):
         model.train()
@@ -60,17 +56,19 @@ def train_model(
             attn_mean = attn_map.mean().item()
             attn_max = attn_map.max().item()
 
-            pbar.set_postfix({
-                'loss': f"{loss.item():.3f}",
-                'cls': f"{loss_dict['cls']:.3f}",
-                'center': f"{loss_dict['center']:.3f}",
-                'compact': f"{loss_dict['compact']:.3f}",
-                'TV': f"{loss_dict['TV']:.3f}",
-                'attn_min': f"{attn_min:.3f}",
-                'attn_mean': f"{attn_mean:.3f}",
-                'attn_max': f"{attn_max:.3f}",
-                'acc': f"{100 * correct / total:.2f}%"
-            })
+            pbar.set_postfix(
+                {
+                    "loss": f"{loss.item():.3f}",
+                    "cls": f"{loss_dict['cls']:.3f}",
+                    "center": f"{loss_dict['center']:.3f}",
+                    "compact": f"{loss_dict['compact']:.3f}",
+                    "TV": f"{loss_dict['TV']:.3f}",
+                    "attn_min": f"{attn_min:.3f}",
+                    "attn_mean": f"{attn_mean:.3f}",
+                    "attn_max": f"{attn_max:.3f}",
+                    "acc": f"{100 * correct / total:.2f}%",
+                }
+            )
 
         train_loss /= total
         train_acc = correct / total
@@ -97,56 +95,65 @@ def train_model(
 
         scheduler.step(val_loss)
 
-        print(f"Epoch {epoch}: Train loss={train_loss:.4f}, acc={train_acc:.4f} | "
-              f"Val loss={val_loss:.4f}, acc={val_acc:.4f} | LR={optimizer.param_groups[0]['lr']:.6f}")
+        print(
+            f"Epoch {epoch}: Train loss={train_loss:.4f}, acc={train_acc:.4f} | "
+            f"Val loss={val_loss:.4f}, acc={val_acc:.4f} | LR={optimizer.param_groups[0]['lr']:.6f}"
+        )
 
-        history['train_loss'].append(train_loss)
-        history['val_loss'].append(val_loss)
-        history['train_acc'].append(train_acc)
-        history['val_acc'].append(val_acc)
+        history["train_loss"].append(train_loss)
+        history["val_loss"].append(val_loss)
+        history["train_acc"].append(train_acc)
+        history["val_acc"].append(val_acc)
 
         if epoch % 3 == 0:
-            save_path = os.path.join(save_dir, f'model_epoch{epoch}.pth')
-            torch.save({
-                'model_state_dict': model.state_dict(),
-                'arcface_state_dict': criterion.arcface.state_dict(),
-                'optimizer_state_dict': optimizer.state_dict(),
-            }, save_path)
+            save_path = os.path.join(save_dir, f"model_epoch{epoch}.pth")
+            torch.save(
+                {
+                    "model_state_dict": model.state_dict(),
+                    "arcface_state_dict": criterion.arcface.state_dict(),
+                    "optimizer_state_dict": optimizer.state_dict(),
+                },
+                save_path,
+            )
             print(f"Saved checkpoint: {save_path}")
 
-    final_path = os.path.join(save_dir, 'model_final.pth')
-    torch.save({
-        'model_state_dict': model.state_dict(),
-        'arcface_state_dict': criterion.arcface.state_dict(),
-    }, final_path)
+    final_path = os.path.join(save_dir, "model_final.pth")
+    torch.save(
+        {
+            "model_state_dict": model.state_dict(),
+            "arcface_state_dict": criterion.arcface.state_dict(),
+        },
+        final_path,
+    )
     print(f"Saved final model: {final_path}")
 
     # Графики
-    plt.figure(figsize=(12,5))
-    plt.subplot(1,2,1)
-    plt.plot(history['train_loss'], label='Train Loss')
-    plt.plot(history['val_loss'], label='Val Loss')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
+    plt.figure(figsize=(12, 5))
+    plt.subplot(1, 2, 1)
+    plt.plot(history["train_loss"], label="Train Loss")
+    plt.plot(history["val_loss"], label="Val Loss")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
     plt.legend()
     plt.grid(True)
 
-    plt.subplot(1,2,2)
-    plt.plot(history['train_acc'], label='Train Acc')
-    plt.plot(history['val_acc'], label='Val Acc')
-    plt.xlabel('Epoch')
-    plt.ylabel('Accuracy')
+    plt.subplot(1, 2, 2)
+    plt.plot(history["train_acc"], label="Train Acc")
+    plt.plot(history["val_acc"], label="Val Acc")
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracy")
     plt.legend()
     plt.grid(True)
 
     plt.tight_layout()
-    plt.savefig(os.path.join(save_dir, 'training_plot.png'))
+    plt.savefig(os.path.join(save_dir, "training_plot.png"))
     plt.show()
 
     return model, history
 
+
 # Пример запуска
 if __name__ == "__main__":
-    train_loader, val_loader = get_dataloader("data/realdata", batch_size=32, val_split=0.2)
-    model = Model(num_classes=len(train_loader.dataset.dataset.classes), emb_dim=128)
+    train_loader, val_loader = get_dataloader("data/realdata", batch_size=32)
+    model = Model(num_classes=len(train_loader.dataset.classes), emb_dim=128)
     trained_model, history = train_model(model, train_loader, val_loader, num_epochs=10, lr=1e-4)
