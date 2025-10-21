@@ -110,7 +110,7 @@ class AttentionLoss(nn.Module):
         if self.current_epoch <= 7:
             L_sparse = torch.relu(mu - 0.3)
         else:
-            L_sparse = mu
+            L_sparse = torch.relu(0.3 - mu)
 
         # --- 6. Штраф за низкие максимумы ---
         attn_max_vals = attn_map.view(B, -1).max(dim=1).values  # [B]
