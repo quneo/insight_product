@@ -44,9 +44,9 @@ class AttentionLoss(nn.Module):
         m=0.33,
         w_classif=1.0,
         w_center=0.6,
-        w_compact=1.6,
+        w_compact=1.5,
         w_tv=1.0,
-        w_sparse=3.0,
+        w_sparse=2.5,
         w_max=1.5,
     ):
         super().__init__()
