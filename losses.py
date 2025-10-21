@@ -44,9 +44,10 @@ class AttentionLoss(nn.Module):
         m=0.33,
         w_classif=1.0,
         w_center=0.4,
-        w_compact=1.9,
+        w_compact=1.6,
         w_tv=1.0,
         w_sparse=4.0,
+        w_max=1.5,
     ):
         super().__init__()
         self.arcface = ArcFaceLoss(num_classes, emb_dim, s=s, m=m)
@@ -55,10 +56,18 @@ class AttentionLoss(nn.Module):
         self.w_compact = w_compact
         self.w_tv = w_tv
         self.w_sparse = w_sparse
+        self.w_max = w_max
         self.current_epoch = 0
 
     def set_epoch(self, epoch):
         self.current_epoch = epoch
+
+        if epoch == 7:
+            self.w_sparse = 1.0
+            self.w_compact = 1.5
+            self.w_tv = 0.4
+            self.w_max = 2.0
+            self.w_classif = 1.3
 
     def forward(self, emb, labels, attn_map):
         # emb: [B, D], labels: [B], attn_map: [B,1,H,W]
@@ -86,7 +95,10 @@ class AttentionLoss(nn.Module):
 
         # --- 3. Компактность ---
         # Штрафуем за распыленное внимание
-        L_compact = -torch.mean(attn_map * torch.log(attn_map + eps))  # энтропия - чем концентрированнее, тем лучше
+        if self.current_epoch <= 5:
+            L_compact = -torch.mean(attn_map * torch.log(attn_map + eps))  # энтропия - чем концентрированнее, тем лучше
+        else:
+            L_compact = torch.tensor(0.0, device=attn_map.device)
 
         # --- 4. Гладкость (Total Variation) ---
         diff_h = attn_map[:, :, 1:, :] - attn_map[:, :, :-1, :]
@@ -95,7 +107,14 @@ class AttentionLoss(nn.Module):
 
         # --- 5. Sparsity: штраф за большое среднее ---
         mu = attn_map.mean()
-        L_sparse = torch.relu(mu - 0.3)
+        if self.current_epoch <= 7:
+            L_sparse = torch.relu(mu - 0.3)
+        else:
+            L_sparse = mu
+
+        # --- 6. Штраф за низкие максимумы ---
+        attn_max_vals = attn_map.view(B, -1).max(dim=1).values  # [B]
+        L_max = torch.mean(torch.relu(0.9 - attn_max_vals) ** 2)
 
         # --- Суммарный лосс ---
         L_total = (
@@ -104,6 +123,7 @@ class AttentionLoss(nn.Module):
             + self.w_compact * L_compact
             + self.w_tv * L_tv
             + self.w_sparse * L_sparse
+            + self.w_max * L_max
         )
 
         return (

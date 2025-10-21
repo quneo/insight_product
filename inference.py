@@ -23,7 +23,7 @@ class AttentionVisualizer:
         # Даталоадер
         train_loader, val_loader = get_dataloader(data_dir, batch_size=batch_size)
         self.val_loader = torch.utils.data.DataLoader(
-            val_loader.dataset, batch_size=batch_size, shuffle=False, num_workers=0
+            val_loader.dataset, batch_size=batch_size, shuffle=True, num_workers=0
         )
         self.iterator = iter(self.val_loader)
         self.class_names = train_loader.dataset.classes
@@ -93,4 +93,4 @@ class AttentionVisualizer:
 
 
 if __name__ == "__main__":
-    AttentionVisualizer(model_path="results/model_epoch6.pth", data_dir="data", num_classes=124, batch_size=1)
+    AttentionVisualizer(model_path="results/model_epoch15.pth", data_dir="data", num_classes=124, batch_size=1)

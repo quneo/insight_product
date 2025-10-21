@@ -52,7 +52,6 @@ def train_model(
             correct += (preds == labels).sum().item()
             total += labels.size(0)
 
-            # <<< ДОБАВЛЕНО: статистика по вниманию >>>
             attn_min = attn_map.min().item()
             attn_mean = attn_map.mean().item()
             attn_max = attn_map.max().item()
@@ -74,7 +73,6 @@ def train_model(
         train_loss /= total
         train_acc = correct / total
 
-        # Валидация (можно добавить статистику и сюда, но обычно не нужно)
         model.eval()
         criterion.eval()
         val_loss = 0
