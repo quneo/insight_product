@@ -62,7 +62,7 @@ class AttentionLoss(nn.Module):
     def set_epoch(self, epoch):
         self.current_epoch = epoch
 
-        if epoch == 7:
+        if epoch == 5:
             self.w_sparse = 1.0
             self.w_compact = 1.5
             self.w_tv = 0.4
@@ -108,9 +108,9 @@ class AttentionLoss(nn.Module):
         # --- 5. Sparsity: штраф за большое среднее ---
         mu = attn_map.mean()
         if self.current_epoch <= 7:
-            L_sparse = torch.relu(mu - 0.3)
+            L_sparse = torch.relu(mu - 0.35)
         else:
-            L_sparse = torch.relu(0.48 - mu)
+            L_sparse = torch.tensor(0.0, device=attn_map.device)
 
         # --- 6. Штраф за низкие максимумы ---
         attn_max_vals = attn_map.view(B, -1).max(dim=1).values  # [B]
