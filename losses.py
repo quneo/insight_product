@@ -62,11 +62,11 @@ class AttentionLoss(nn.Module):
     def set_epoch(self, epoch):
         self.current_epoch = epoch
 
-        if epoch == 5:
-            self.w_sparse = 1.0
-            self.w_compact = 1.5
-            self.w_tv = 0.4
-            self.w_max = 2.3
+        if epoch == 7:
+            self.w_sparse = 0.1
+            self.w_compact = 0.2
+            self.w_tv = 0.1
+            self.w_max = 0.4
             self.w_classif = 1.3
 
     def forward(self, emb, labels, attn_map):
