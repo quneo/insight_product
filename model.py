@@ -22,7 +22,7 @@ class Model(nn.Module):
         self.layer4 = backbone.layer4  # 7x7
 
         # Spatial attention на 14×14 (выход layer3 → 256 каналов)
-        self.spatial_attn = nn.Sequential(nn.Conv2d(256, 1, kernel_size=1), nn.Sigmoid())
+        self.spatial_attn = nn.Sequential(nn.Conv2d(256, 1, kernel_size=1), nn.BatchNorm2d(1), nn.Sigmoid())
 
         # Эмбеддинг из последнего слоя (layer4 → 512)
         self.pool = nn.AdaptiveAvgPool2d(1)

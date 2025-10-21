@@ -30,6 +30,7 @@ def train_model(
     history = {"train_loss": [], "val_loss": [], "train_acc": [], "val_acc": []}
 
     for epoch in range(1, num_epochs + 1):
+        criterion.set_epoch(epoch)
         model.train()
         criterion.train()
         train_loss = 0
@@ -154,6 +155,6 @@ def train_model(
 
 # Пример запуска
 if __name__ == "__main__":
-    train_loader, val_loader = get_dataloader("data/realdata", batch_size=32)
+    train_loader, val_loader = get_dataloader("data", batch_size=32)
     model = Model(num_classes=len(train_loader.dataset.classes), emb_dim=128)
     trained_model, history = train_model(model, train_loader, val_loader, num_epochs=10, lr=1e-4)

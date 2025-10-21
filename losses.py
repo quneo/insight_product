@@ -55,6 +55,10 @@ class AttentionLoss(nn.Module):
         self.w_compact = w_compact
         self.w_tv = w_tv
         self.w_sparse = w_sparse
+        self.current_epoch = 0
+
+    def set_epoch(self, epoch):
+        self.current_epoch = epoch
 
     def forward(self, emb, labels, attn_map):
         # emb: [B, D], labels: [B], attn_map: [B,1,H,W]
@@ -65,15 +69,20 @@ class AttentionLoss(nn.Module):
         # --- 1. ArcFace классификация ---
         L_cls = F.cross_entropy(logits, labels)
 
-        # --- 2. Центральный bias ---
+        # --- 2. Центральный лосс ---
         # Создаем маску центра (гауссово распределение)
-        y = torch.linspace(-1, 1, H, device=attn_map.device).view(H, 1)
-        x = torch.linspace(-1, 1, W, device=attn_map.device).view(1, W)
-        dist = torch.sqrt(x**2 + y**2)  # евклидово расстояние от центра
-        center_mask = torch.exp(-dist * 3)  # гауссово ядро, 3 - sharpness
+        if self.current_epoch <= 3 and self.w_center > 0:
+            y = torch.linspace(-1, 1, H, device=attn_map.device).view(H, 1)
+            x = torch.linspace(-1, 1, W, device=attn_map.device).view(1, W)
+            dist = torch.sqrt(x**2 + y**2)  # евклидово расстояние от центра
+            center_mask = torch.exp(-dist * 3)  # гауссово ядро, 3 - sharpness
 
-        # Поощряем внимание в центре, штрафуем на краях
-        L_center = 1.0 - F.cosine_similarity(attn_map.view(B, -1), center_mask.view(1, -1).expand(B, -1), dim=1).mean()
+            # Поощряем внимание в центре, штрафуем на краях
+            L_center = (
+                1.0 - F.cosine_similarity(attn_map.view(B, -1), center_mask.view(1, -1).expand(B, -1), dim=1).mean()
+            )
+        else:
+            L_center = torch.tensor(0.0, device=attn_map.device)
 
         # --- 3. Компактность ---
         # Штрафуем за распыленное внимание
