@@ -36,7 +36,18 @@ class ArcFaceLoss(nn.Module):
 
 
 class AttentionLoss(nn.Module):
-    def __init__(self, num_classes, emb_dim=128, s=20.0, m=0.2, w_classif=0.7, w_center=0.8, w_compact=1.9, w_tv=0.9, w_sparse=4.0):
+    def __init__(
+        self,
+        num_classes,
+        emb_dim=128,
+        s=20.0,
+        m=0.2,
+        w_classif=1.0,
+        w_center=0.1,
+        w_compact=1.9,
+        w_tv=1.0,
+        w_sparse=4.0,
+    ):
         super().__init__()
         self.arcface = ArcFaceLoss(num_classes, emb_dim, s=s, m=m)
         self.w_classif = w_classif
@@ -60,13 +71,9 @@ class AttentionLoss(nn.Module):
         x = torch.linspace(-1, 1, W, device=attn_map.device).view(1, W)
         dist = torch.sqrt(x**2 + y**2)  # евклидово расстояние от центра
         center_mask = torch.exp(-dist * 3)  # гауссово ядро, 3 - sharpness
-        
+
         # Поощряем внимание в центре, штрафуем на краях
-        L_center = 1.0 - F.cosine_similarity(
-            attn_map.view(B, -1), 
-            center_mask.view(1, -1).expand(B, -1), 
-            dim=1
-        ).mean()
+        L_center = 1.0 - F.cosine_similarity(attn_map.view(B, -1), center_mask.view(1, -1).expand(B, -1), dim=1).mean()
 
         # --- 3. Компактность ---
         # Штрафуем за распыленное внимание
@@ -82,17 +89,23 @@ class AttentionLoss(nn.Module):
         L_sparse = torch.relu(mu - 0.3)
 
         # --- Суммарный лосс ---
-        L_total = (self.w_classif * L_cls + 
-                  self.w_center * L_center + 
-                  self.w_compact * L_compact +
-                  self.w_tv * L_tv + 
-                  self.w_sparse * L_sparse)
+        L_total = (
+            self.w_classif * L_cls
+            + self.w_center * L_center
+            + self.w_compact * L_compact
+            + self.w_tv * L_tv
+            + self.w_sparse * L_sparse
+        )
 
-        return L_total, logits, {
-            "total": L_total.item(),
-            "cls": L_cls.item(),
-            "center": L_center.item(),
-            "compact": L_compact.item(),
-            "TV" : L_tv.item(),
-            "sparse": L_sparse.item()
-        }
+        return (
+            L_total,
+            logits,
+            {
+                "total": L_total.item(),
+                "cls": L_cls.item(),
+                "center": L_center.item(),
+                "compact": L_compact.item(),
+                "TV": L_tv.item(),
+                "sparse": L_sparse.item(),
+            },
+        )
