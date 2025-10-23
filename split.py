@@ -9,7 +9,7 @@ IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".webp"}
 
 def split_dataset(
     root_folder: str,
-    val_size: int = 70,
+    val_size: int = 150,
     seed: int = 42,
     move_files: bool = True,  # True = переместить, False = копировать
 ):
@@ -86,10 +86,7 @@ def split_dataset(
 
 # === ЗАПУСК ===
 if __name__ == "__main__":
-    # Укажи путь к папке с классами (например, "dataset_balanced")
-    DATASET_ROOT = (
-        r"C:\Users\Nikitin Vadim\PythonCode\insight_product\data\weighter_dataset"  # ← ЗАМЕНИ НА СВОЙ ПУТЬ!
-    )
+    DATASET_ROOT = r"C:\Users\Nikitin Vadim\PythonCode\insight_product\freshdataset\weighter_dataset"
 
     split_dataset(
         root_folder=DATASET_ROOT,

@@ -134,7 +134,16 @@ class MultiModelAttentionVisualizer:
 
 
 if __name__ == "__main__":
-    model_paths = ["results/model_epoch5.pth", "results/model_epoch10.pth", "results/model_epoch25.pth"]
+    model_paths = [
+        "results/free_train/model_epoch5.pth",
+        "results/free_train/model_epoch10.pth",
+        "results/free_train/model_epoch25.pth",
+    ]
+    # model_paths = [
+    #     "results/prodfocusv1/model_epoch5.pth",
+    #     "results/prodfocusv1/model_epoch10.pth",
+    #     "results/prodfocusv1/model_epoch25.pth",
+    # ]
 
     model_names = ["Epoch 5", "Epoch 10", "Epoch 25"]
 
