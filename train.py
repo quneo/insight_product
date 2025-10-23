@@ -116,15 +116,15 @@ def train_model(
             )
             print(f"Saved checkpoint: {save_path}")
 
-        final_path = os.path.join(save_dir, "model_final.pth")
-        torch.save(
-            {
-                "model_state_dict": model.state_dict(),
-                "arcface_state_dict": criterion.arcface.state_dict(),
-            },
-            final_path,
-        )
-        print(f"Saved final model: {final_path}")
+    final_path = os.path.join(save_dir, "model_final.pth")
+    torch.save(
+        {
+            "model_state_dict": model.state_dict(),
+            "arcface_state_dict": criterion.arcface.state_dict(),
+        },
+        final_path,
+    )
+    print(f"Saved final model: {final_path}")
 
     # Графики
     plt.figure(figsize=(12, 5))
