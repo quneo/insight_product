@@ -18,7 +18,7 @@ class Model(nn.Module):
         self.stem = nn.Sequential(backbone.conv1, backbone.bn1, backbone.relu, backbone.maxpool)
         self.layer1 = backbone.layer1  # 56x56
         self.layer2 = backbone.layer2  # 28x28
-        self.layer3 = backbone.layer3  # 14x14 ← внимание здесь
+        self.layer3 = backbone.layer3  # 14x14
         self.layer4 = backbone.layer4  # 7x7
 
         # Spatial attention на 14×14 (выход layer3 → 256 каналов)

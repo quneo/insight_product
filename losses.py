@@ -40,8 +40,8 @@ class AttentionLoss(nn.Module):
         self,
         num_classes,
         emb_dim=128,
-        s=33.0,
-        m=0.33,
+        s=42.0,
+        m=0.35,
         w_classif=1.0,
         w_center=0.6,
         w_compact=1.5,
@@ -65,7 +65,7 @@ class AttentionLoss(nn.Module):
         if epoch == 7:
             self.w_sparse = 0.1
             self.w_compact = 0.2
-            self.w_tv = 0.1
+            self.w_tv = 0.7
             self.w_max = 0.4
             self.w_classif = 1.3
 
@@ -80,7 +80,7 @@ class AttentionLoss(nn.Module):
 
         # --- 2. Центральный лосс ---
         # Создаем маску центра (гауссово распределение)
-        if self.current_epoch <= 3 and self.w_center > 0:
+        if self.current_epoch <= 4 and self.w_center > 0:
             y = torch.linspace(-1, 1, H, device=attn_map.device).view(H, 1)
             x = torch.linspace(-1, 1, W, device=attn_map.device).view(1, W)
             dist = torch.sqrt(x**2 + y**2)  # евклидово расстояние от центра
@@ -95,7 +95,7 @@ class AttentionLoss(nn.Module):
 
         # --- 3. Компактность ---
         # Штрафуем за распыленное внимание
-        if self.current_epoch <= 5:
+        if self.current_epoch <= 7:
             L_compact = -torch.mean(attn_map * torch.log(attn_map + eps))  # энтропия - чем концентрированнее, тем лучше
         else:
             L_compact = torch.tensor(0.0, device=attn_map.device)

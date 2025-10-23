@@ -93,4 +93,9 @@ class AttentionVisualizer:
 
 
 if __name__ == "__main__":
-    AttentionVisualizer(model_path="results/model_epoch20.pth", data_dir="data", num_classes=124, batch_size=1)
+    AttentionVisualizer(
+        model_path=r"C:\Users\Nikitin Vadim\PythonCode\insight_product\results\square\square_model_epoch100.pth",
+        data_dir="data",
+        num_classes=124,
+        batch_size=1,
+    )
