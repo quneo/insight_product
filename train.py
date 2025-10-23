@@ -115,15 +115,16 @@ def train_model(
         )
         print(f"Saved checkpoint: {save_path}")
 
-    final_path = os.path.join(save_dir, "model_final.pth")
-    torch.save(
-        {
-            "model_state_dict": model.state_dict(),
-            "arcface_state_dict": criterion.arcface.state_dict(),
-        },
-        final_path,
-    )
-    print(f"Saved final model: {final_path}")
+        if epoch % 2 == 0:
+            final_path = os.path.join(save_dir, "model_final.pth")
+            torch.save(
+                {
+                    "model_state_dict": model.state_dict(),
+                    "arcface_state_dict": criterion.arcface.state_dict(),
+                },
+                final_path,
+            )
+            print(f"Saved final model: {final_path}")
 
     # Графики
     plt.figure(figsize=(12, 5))
@@ -154,4 +155,4 @@ def train_model(
 if __name__ == "__main__":
     train_loader, val_loader = get_dataloader("data", batch_size=32)
     model = Model(num_classes=len(train_loader.dataset.classes), emb_dim=128)
-    trained_model, history = train_model(model, train_loader, val_loader, num_epochs=10, lr=1e-4)
+    trained_model, history = train_model(model, train_loader, val_loader, num_epochs=20, lr=1e-4)
