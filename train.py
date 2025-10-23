@@ -104,27 +104,27 @@ def train_model(
         history["train_acc"].append(train_acc)
         history["val_acc"].append(val_acc)
 
-        save_path = os.path.join(save_dir, f"model_epoch{epoch}.pth")
-        torch.save(
-            {
-                "model_state_dict": model.state_dict(),
-                "arcface_state_dict": criterion.arcface.state_dict(),
-                "optimizer_state_dict": optimizer.state_dict(),
-            },
-            save_path,
-        )
-        print(f"Saved checkpoint: {save_path}")
-
         if epoch % 2 == 0:
-            final_path = os.path.join(save_dir, "model_final.pth")
+            save_path = os.path.join(save_dir, f"model_epoch{epoch}.pth")
             torch.save(
                 {
                     "model_state_dict": model.state_dict(),
                     "arcface_state_dict": criterion.arcface.state_dict(),
+                    "optimizer_state_dict": optimizer.state_dict(),
                 },
-                final_path,
+                save_path,
             )
-            print(f"Saved final model: {final_path}")
+            print(f"Saved checkpoint: {save_path}")
+
+        final_path = os.path.join(save_dir, "model_final.pth")
+        torch.save(
+            {
+                "model_state_dict": model.state_dict(),
+                "arcface_state_dict": criterion.arcface.state_dict(),
+            },
+            final_path,
+        )
+        print(f"Saved final model: {final_path}")
 
     # Графики
     plt.figure(figsize=(12, 5))
