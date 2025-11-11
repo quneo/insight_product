@@ -7,6 +7,7 @@ import os
 from losses import ArcFaceLoss
 from model import Model
 from dataloader import get_dataloader
+from model_focus_v2 import Model_v2
 
 
 def fine_tune_model(
@@ -21,10 +22,23 @@ def fine_tune_model(
     os.makedirs(save_dir, exist_ok=True)
 
     # Загрузка модели
-    model = Model(num_classes=len(train_loader.dataset.classes), emb_dim=128)
+    model = Model_v2(emb_dim=128).to(device)
     checkpoint = torch.load(model_path, map_location=device)
-    model.load_state_dict(checkpoint["model_state_dict"])
-    model.to(device)
+    old_state_dict = checkpoint["model_state_dict"]  # веса от Model
+    new_state_dict = model.state_dict()
+
+    # Переносим совпадающие по имени и размеру веса
+    loaded_count = 0
+    for name, param in old_state_dict.items():
+        if name in new_state_dict and new_state_dict[name].shape == param.shape:
+            new_state_dict[name] = param
+            loaded_count += 1
+            print(f"✅ Загружен: {name}")
+        else:
+            print(f"⚠️ Пропущен: {name} (либо отсутствует, либо размер не совпадает)")
+
+    model.load_state_dict(new_state_dict, strict=True)
+    print(f"✅ Всего перенесено параметров: {loaded_count}")
 
     # Заморозка всех слоев кроме последних
     for name, param in model.named_parameters():
@@ -168,11 +182,11 @@ def fine_tune_model(
 
 
 if __name__ == "__main__":
-    train_loader, val_loader = get_dataloader("data", batch_size=32)
+    train_loader, val_loader = get_dataloader("freshdataset", batch_size=32)
 
     # Основной вариант
     trained_model, history = fine_tune_model(
-        model_path="results/segment_tuned.pth",
+        model_path="results/Focus.pth",
         train_loader=train_loader,
         val_loader=val_loader,
         num_epochs=15,

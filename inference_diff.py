@@ -135,9 +135,9 @@ class MultiModelAttentionVisualizer:
 
 if __name__ == "__main__":
     model_paths = [
-        "results/model_epoch2.pth",
-        "results/model_epoch6.pth",
-        "results/model_epoch20.pth",
+        "results/fine_tuned_epoch14.pth",
+        "results/fine_tuned_epoch2.pth",
+        "results/segment_tuned.pth",
     ]
     # model_paths = [
     #     "results/prodfocusv1/model_epoch5.pth",
@@ -145,7 +145,7 @@ if __name__ == "__main__":
     #     "results/prodfocusv1/model_epoch25.pth",
     # ]
 
-    model_names = ["Epoch 2", "Epoch 10", "Epoch 20"]
+    model_names = ["Epoch 14", "Epoch 2", "Epoch 0"]
 
     MultiModelAttentionVisualizer(
         model_paths=model_paths, model_names=model_names, data_dir="data", num_classes=124, batch_size=1

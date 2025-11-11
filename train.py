@@ -7,6 +7,7 @@ import os
 from losses import AttentionLoss
 from model import Model
 from dataloader import get_dataloader
+from model_focus_v2 import Model_v2
 
 
 def train_model(
@@ -154,5 +155,5 @@ def train_model(
 # Пример запуска
 if __name__ == "__main__":
     train_loader, val_loader = get_dataloader("data", batch_size=32)
-    model = Model(num_classes=len(train_loader.dataset.classes), emb_dim=128)
+    model = Model_v2(emb_dim=128)
     trained_model, history = train_model(model, train_loader, val_loader, num_epochs=20, lr=1e-4)
